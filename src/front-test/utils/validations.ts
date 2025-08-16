@@ -24,3 +24,4 @@ export const validateLocatorIsVisible = async (page: Page, element: LocatorType)
 export const validateFirstLocator = async (page: Page, element: string, textValue: string) => {
   await page.locator(element).filter({ hasText: textValue }).first();
 }
+
