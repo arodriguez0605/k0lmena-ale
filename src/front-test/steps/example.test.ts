@@ -4,7 +4,8 @@ import { BASEURL } from '../config';
 import { pages } from '../hooks/hook';
 import { validateFirstLocator } from '../utils/validations';
 import {
-  divResult
+  divResult,
+  exampleLocators
 } from '../locators/exampleLocators';
 import {
   getByPlaceholderAndClickIt,
@@ -24,15 +25,11 @@ Given("El usuario ingresa al link del formulario", async () => {
 Then('El sistema carga el formulario correctamente', async function () {
   for (const page of pages) {
         // Verificamos que los campos principales estén visibles
-        const firstName = page.locator('#firstname');
-        const lastName = page.locator('#lasttname');
-        const email = page.locator('#email');
-        const submitButton = page.locator('input[type="submit"]');
     
-        await expect(firstName).toBeVisible();
-        await expect(lastName).toBeVisible();
-        await expect(email).toBeVisible();
-        await expect(submitButton).toBeVisible();
+      await expect(page.locator(exampleLocators.firstName)).toBeVisible();
+      await expect(page.locator(exampleLocators.lastName)).toBeVisible();
+      await expect(page.locator(exampleLocators.email)).toBeVisible();
+      await expect(page.locator(exampleLocators.submitButton)).toBeVisible();
   }
 });
 
@@ -47,21 +44,19 @@ Given("El usuario está en la pagina del formulario", async () => {
 
 When('El usuario ingresa {string} en el campo First Name', async function (firstName: string) {
   for (const page of pages) {
-    //await page.fill("#firstName", firstName, { timeout: 60000 });
-    await page.fill("#firstname", firstName);
+    await page.fill(exampleLocators.firstName, firstName);
   }
 });
 
 When('El usuario ingresa {string} en el campo Last Name', async function (lastname: string) {
   for (const page of pages) {
-   // await page.fill("#lastname", lastname, { timeout: 60000 });
-    await page.fill("#lasttname", lastname);
+   await page.fill(exampleLocators.lastName, lastname);
   }
 });
 
 When('El usuario ingresa {string} en el campo Email', async function (email: string) {
   for (const page of pages) {
-    await page.fill("#email", email);
+    await page.fill(exampleLocators.email, email);
   }
 });
 
@@ -86,31 +81,31 @@ When('El usuario selecciona {string} en el campo Country code', async function (
 
 When('El usuario ingresa {string} en el campo Phone Number', async function (phone: string) {
   for (const page of pages) {
-    await page.fill("#Phno", phone);
+    await getByPlaceholderAndFillIt(page, exampleLocators.phoneNumber, phone);
   }
 });
 
 When('El usuario ingresa {string} en el campo Address Line-1', async function (address1: string) {
   for (const page of pages) {
-    await page.fill("#Addl1", address1);
+    await getByPlaceholderAndFillIt(page, exampleLocators.addressLine1, address1)
   }
 });
 
 When('El usuario ingresa {string} en el campo Address Line-2', async function (address2: string) {
   for (const page of pages) {
-    await page.fill("#Addl2", address2);
+    await getByPlaceholderAndFillIt(page, exampleLocators.addressLine2, address2)
   }
 });
 
 When('El usuario ingresa {string} en el campo State', async function (state: string) {
   for (const page of pages) {
-    await page.fill("#state", state);
+    await page.fill(exampleLocators.state, state);
   }
 });
 
 When('El usuario ingresa {string} en el campo Postal-Code', async function (postal: string) {
   for (const page of pages) {
-    await page.fill("#postalcode", postal);
+    await page.fill(exampleLocators.postalCode, postal);
   }
 });
 
@@ -127,7 +122,6 @@ When('El usuario selecciona {string} en el campo Country', async function (count
 
     // Verificar la selección
     const selected = await countrySelect.locator('option:checked').textContent();
-    //console.log(`Seleccionado Country: ${selected}`);
 
   }
 });
@@ -140,10 +134,7 @@ When('El usuario ingresa {string} en el campo Date Of Birth', async function (do
    
        // Llenar el input
        await page.fill('#Date', formattedDate);
-   
-       // Opcional: verificar que se ingresó correctamente
-       const value = await page.locator('#Date').inputValue();
-       //console.log(`Fecha ingresada: ${value}`);
+       const value = await page.locator(exampleLocators.dateOfBirth).inputValue();
   }
 });
 
@@ -159,22 +150,29 @@ When('El usuario selecciona {string} en el campo Gender', async function (gender
       const genderId = genderMap[gender];
       if (!genderId) throw new Error(`Gender desconocido: ${gender}`);
   
-      // Check usando el id
-      await page.check(`#${genderId}`);
+      const radio = page.locator(`#${genderId}`);
   
-      //console.log(` Gender seleccionado: ${gender}`);
+      try {
+        await radio.check({ timeout: 5000 });
+      } catch (e) {
+        console.warn(`.check() falló, intentando con .click()`);
+        await radio.click({ force: true });
+      }
+  
+      await expect(radio).toBeChecked();
+      console.log(`Gender seleccionado: ${gender}`);
     }}
 });
 
 When('El usuario marca la casilla de términos y condiciones', async function () {
   for (const page of pages) {
-    await page.locator('label', { hasText: 'I agree to the terms and conditions' }).locator('input[type="checkbox"]').check();
+    await page.locator(exampleLocators.termsAndConditions).click();
   }
 });
 
 When('El usuario hace clic en Submit', async function ( ) {
   for (const page of pages) {
-    await page.click('input[type="submit"]');
+    await page.locator(exampleLocators.submitButton).click();
   }
 });
 
@@ -195,13 +193,13 @@ Given("El usuario ingresa en la pagina del formulario", async () => {
 
 When('El usuario ingresa {string} incorrectamente en el campo First Name', async function (firstName: string) {
   for (const page of pages) {
-    await page.fill("#firstname", firstName);
+    await page.fill(exampleLocators.firstName, firstName);
   }
 });
 
 When('El usuario hace clic en Submit para enviar la información', async function ( ) {
   for (const page of pages) {
-    await page.click('input[type="submit"]');
+    await page.locator(exampleLocators.submitButton).click();
   }
 });
 
@@ -228,21 +226,19 @@ Given("El usuario está en la pagina del formulario con los campos llenos", asyn
 
 When('El usuario ingresa el {string} en el campo First Name', async function (firstName: string) {
   for (const page of pages) {
-    //await page.fill("#firstName", firstName, { timeout: 60000 });
-    await page.fill("#firstname", firstName);
+    await page.fill(exampleLocators.firstName, firstName);
   }
 });
 
 When('El usuario ingresa el {string} en el campo Last Name', async function (lastname: string) {
   for (const page of pages) {
-   // await page.fill("#lastname", lastname, { timeout: 60000 });
-    await page.fill("#lasttname", lastname);
+    await page.fill(exampleLocators.lastName, lastname);
   }
 });
 
 When('El usuario ingresa el {string} en el campo Email', async function (email: string) {
   for (const page of pages) {
-    await page.fill("#email", email);
+    await page.fill(exampleLocators.email, email);
   }
 });
 
@@ -300,21 +296,19 @@ Given("El usuario llena todos los campos pero no acepta terminos y condiciones",
 
 When('El usuario ingresa {string} en el campo del First Name', async function (firstName: string) {
   for (const page of pages) {
-    //await page.fill("#firstName", firstName, { timeout: 60000 });
-    await page.fill("#firstname", firstName);
+    await page.fill(exampleLocators.firstName, firstName);
   }
 });
 
 When('El usuario ingresa {string} en el campo del Last Name', async function (lastname: string) {
   for (const page of pages) {
-   // await page.fill("#lastname", lastname, { timeout: 60000 });
-    await page.fill("#lasttname", lastname);
+    await page.fill(exampleLocators.lastName, lastname);
   }
 });
 
 When('El usuario ingresa {string} en el campo del Email', async function (email: string) {
   for (const page of pages) {
-    await page.fill("#email", email);
+    await page.fill(exampleLocators.email, email);
   }
 });
 
@@ -337,15 +331,15 @@ When('El usuario selecciona {string} en el campo del Country code', async functi
 }
 });
 
-When('El usuario ingresa {string} en el campo del Phone Number', async function (phone: string) {
+When('El usuario ingresa {string} en el campo del Phone Number', async function (phone) {
   for (const page of pages) {
-    await page.fill("#Phno", phone);
+    await getByPlaceholderAndFillIt(page, exampleLocators.phoneNumber, phone);
   }
 });
 
 When('El usuario ingresa {string} en el campo del Address Line-1', async function (address1: string) {
   for (const page of pages) {
-    await page.fill("#Addl1", address1);
+    await getByPlaceholderAndFillIt(page, exampleLocators.addressLine1, address1)
   }
 });
 
@@ -411,10 +405,17 @@ When('El usuario selecciona {string} en el campo del Gender', async function (ge
       const genderId = genderMap[gender];
       if (!genderId) throw new Error(`Gender desconocido: ${gender}`);
   
-      // Check usando el id
-      await page.check(`#${genderId}`);
+      const radio = page.locator(`#${genderId}`);
   
-      //console.log(`Gender seleccionado: ${gender}`);
+      try {
+        await radio.check({ timeout: 5000 });
+      } catch (e) {
+        console.warn(`.check() falló, intentando con .click()`);
+        await radio.click({ force: true });
+      }
+  
+      await expect(radio).toBeChecked();
+      console.log(`Gender seleccionado: ${gender}`);
     }}
 });
 
